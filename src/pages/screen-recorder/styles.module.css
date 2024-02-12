@@ -1,0 +1,10 @@
+.ScreenRecorderWrapper {
+  display: grid;
+  place-items: center;
+  gap: 20px;
+}
+
+.buttonWrapper{
+  display: flex;
+  gap: 10px;
+}
