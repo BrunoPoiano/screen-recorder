@@ -13,6 +13,14 @@ html {
 :root {
 
   /* Main Primary color */
+  --red-color: hsla(0, 100%, 50%, 0.801);
+  --green-color: hsl(120, 100%, 25%);
+  
+
+  --green-color-65: color-mix(in oklab, var(--green-color) 65%, var(--mix-color));
+  --red-color-65: color-mix(in oklab, var(--red-color) 65%, var(--mix-color));
+
+
   --base-color: hsla(0, 0%, 0%, 0.801);
   --mix-color: rgb(255, 255, 255);
 
@@ -73,7 +81,7 @@ main {
   display: grid;
   place-items:center;
   gap: 20px;
-  max-width: 1080px;
+  max-width: 110ch;
   width: 100%;
 }
 
@@ -110,18 +118,19 @@ p {
 
 small {
   font-size: var(--font-size-sm);
+  color: var(--neutral-color-10);
 }
 
 
 button{
   min-width: 60px;
   padding: 5px 10px;
-  border-radius: var(--border-radius);
   cursor: pointer;
-
+  
   font-size: var(--font-size-sm);
   font-weight: 600;
-
+  
+  border-radius: var(--border-radius);
   border:none;
   outline: none;
 
@@ -133,13 +142,24 @@ button{
 }
 
 select {
-  min-width: 60px;
-  width: fit-content;
-  padding: 5px 10px;
+
+  --background-color: var(--neutral-color-85);
+
+  max-width: 50ch;
+  width: 100%;
+  padding: 10px 15px;
   
   font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
+
+  border-right-width: 10px;
+  border-radius: var(--border-radius);
+  border: 0px solid var(--background-color);
+  outline: solid 1px var(--background-color);
+
+  background: var(--background-color);
+  color: var(--neutral-color-40);
 
   & option{
     margin-bottom: 5px ;

@@ -9,14 +9,32 @@ export const ScreenRecorder = () => {
   const [recording, setRecording] = useState<boolean>(false);
 
   let recordedChunks: any[] = [];
+  let interval: NodeJS.Timeout | undefined;
+  const [seconds, setSeconds] = useState<number>(0);
+  const [timer, setTimer] = useState<boolean>(false);
+
 
   useEffect(() => {
     getDesktopSources()
   }, []);
 
   useEffect(() => {
+    if (!screenSelected) return
     selectSource(screenSelected)
   }, [screenSelected]);
+
+  useEffect(() => {
+
+    if (timer) {
+      interval = setInterval(() => {
+        setSeconds((prevSeconds) => prevSeconds + 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+
+    return () => clearInterval(interval);
+  }, [timer]);
 
   const getDesktopSources = async () => {
 
@@ -37,8 +55,9 @@ export const ScreenRecorder = () => {
     try {
       const sources = await ipcRenderer.invoke('getDesktopSources', { types: ['screen', 'window'] });
       const Options = sources.map((item: any) => {
+        const name = item.name.length >= 40 ? item.name.slice(0, 35) + "..." : item.name
         return {
-          label: item.name,
+          label: name,
           id: item.id
         }
       })
@@ -90,6 +109,7 @@ export const ScreenRecorder = () => {
 
     recordedChunks.push(event.data);
     setRecording(true)
+    setTimer(true);
   }
 
   async function handleStop() {
@@ -117,6 +137,8 @@ export const ScreenRecorder = () => {
 
     const buffer = Buffer.from(await blob.arrayBuffer());
 
+    setSeconds(0);
+    setTimer(false);
     try {
       await ipcRenderer.invoke('saveScreenRecorded', buffer);
       setRecording(false)
@@ -126,27 +148,28 @@ export const ScreenRecorder = () => {
 
   }
 
+  const formatTime = (time: number): string => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
+
   return (
     <div className={styles.ScreenRecorderWrapper}>
 
-      {!screenSelected ?
-        <h3>Select a screen</h3>
-        :
-        <>
-          <video></video>
-          <div className={styles.buttonWrapper}>
-            <button onClick={() => mediaRecorder && mediaRecorder.start(10)} disabled={recording} > Start</button>
-            <button onClick={() => mediaRecorder && mediaRecorder.stop()} disabled={!recording}> Stop</button>
-          </div>
-        </>
-      }
+      <video></video>
+      <small>{formatTime(seconds)}</small>
+      <ActionButtons screenSelected={screenSelected} mediaRecorder={mediaRecorder} recording={recording} />
 
-      <div>
+      <div className={styles.SelectWrapper}>
         <select
-          onChange={(event) =>
-            setScreenSelected(event.target.value)}
+          value={screenSelected}
+          onChange={(event) => setScreenSelected(event.target.value)}
           disabled={recording}
         >
+          {!screenSelected && (
+            <option value=''>Screens</option>
+          )}
           {
             oprionsMenu.map((item: any, index: number) => (
               <option key={index} value={item.id}>{item.label}</option>
@@ -154,6 +177,33 @@ export const ScreenRecorder = () => {
           }
         </select>
       </div>
+      <button onClick={() => getDesktopSources()}>
+        Refresh Screens
+      </button>
+    </div>
+  )
+}
+
+type ActionButtonsProps = {
+  screenSelected: any,
+  mediaRecorder: any,
+  recording: boolean
+}
+
+const ActionButtons: React.FC<ActionButtonsProps> = ({ screenSelected, mediaRecorder, recording = false }) => {
+
+  if (!screenSelected) {
+    return <h3>Select a screen</h3>
+  }
+
+  if (!mediaRecorder) {
+    return null;
+  }
+
+  return (
+    <div className={styles.buttonWrapper}>
+      <button className={styles.StartButton} onClick={() => mediaRecorder.start(10)} disabled={recording}> Start</button>
+      <button className={styles.StopButton} onClick={() => mediaRecorder.stop()} disabled={!recording}> Stop</button>
     </div>
   )
 }

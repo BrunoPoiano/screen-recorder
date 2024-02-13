@@ -4,7 +4,25 @@
   gap: 20px;
 }
 
-.buttonWrapper{
+.buttonWrapper {
   display: flex;
   gap: 10px;
+}
+
+.StartButton {
+  &:disabled {
+    opacity: 0.2;
+  }
+
+  color: var(--neutral-color-95);
+  background-color: var(--green-color-65);
+}
+
+.StopButton {
+  &:disabled {
+    opacity: 0.2;
+  }
+
+  color: var(--neutral-color-95);
+  background-color: var(--red-color-65);
 }
