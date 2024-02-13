@@ -34,8 +34,8 @@ ipcMain.handle('getDesktopSources', async (event, options) => {
 
 function createWindow() {
   let mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 550,
+    height: 700,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
