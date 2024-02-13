@@ -1,17 +1,17 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, remote } = require('electron');
-
-const { dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, dialog } = require('electron');
+const path = require("path");
+const url = require('url');
 const fs = require('fs')
 
 ipcMain.handle('saveScreenRecorded', async (event, buffer) => {
 
   const { filePath } = await dialog.showSaveDialog({
-    buttonLabel: 'save video',
+    buttonLabel: 'Save Video',
     defaultPath: `video-${Date.now()}.webm`
   });
 
   if (filePath) {
-    
+
     fs.writeFile(filePath, buffer, (err) => {
       if (err) {
         console.error('Error saving video:', err);
@@ -33,19 +33,33 @@ ipcMain.handle('getDesktopSources', async (event, options) => {
 });
 
 function createWindow() {
-  const mainWindow = new BrowserWindow({
+  let mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
     }
   });
 
-  mainWindow.loadURL('http://localhost:3000');
-  mainWindow.webContents.openDevTools()
+  // DEV
+  // mainWindow.loadURL('http://localhost:3000');
+  // mainWindow.webContents.openDevTools();
 
+  //Build
+  mainWindow.loadURL(
+    url.format({
+      pathname: path.join(__dirname, 'build', 'index.html'),
+      protocol: 'file:',
+      slashes: true
+    })
+  );
+
+  mainWindow.on('closed', function () {
+    mainWindow = null;
+  });
 }
+
 app.whenReady().then(() => {
   createWindow()
 

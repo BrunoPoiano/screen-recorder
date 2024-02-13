@@ -1,7 +1,10 @@
 {
-  "name": "electron-react-app",
+  "name": "screen-recorder",
   "version": "0.1.0",
   "main": "main.js",
+  "description": "Screen Recorder App",
+  "license": "-",
+  "homepage": "./",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -10,6 +13,7 @@
     "@types/node": "^16.18.80",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
+    "electron-squirrel-startup": "^1.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -21,7 +25,10 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron-start": "electron ."
+    "electron-start": "electron .",
+    "electron-forge-start": "electron-forge start",
+    "electron-forge-package": "electron-forge package",
+    "electron-forge-make": "electron-forge make"
   },
   "eslintConfig": {
     "extends": [
@@ -42,6 +49,12 @@
     ]
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.2.0",
+    "@electron-forge/maker-deb": "^7.2.0",
+    "@electron-forge/maker-rpm": "^7.2.0",
+    "@electron-forge/maker-squirrel": "^7.2.0",
+    "@electron-forge/maker-zip": "^7.2.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.2.0",
     "electron": "^28.2.2",
     "webpack": "^5.90.1",
     "webpack-cli": "^5.1.4",

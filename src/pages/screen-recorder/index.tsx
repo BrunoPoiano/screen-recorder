@@ -38,6 +38,8 @@ export const ScreenRecorder = () => {
 
   const getDesktopSources = async () => {
 
+    window.require("electron")
+    
     if (!window) return
     if (!window.require) return
 
