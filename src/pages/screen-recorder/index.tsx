@@ -114,6 +114,11 @@ export const ScreenRecorder = () => {
     setTimer(true);
   }
 
+  const handleStartReccording = () => {
+    recordedChunks = []
+    mediaRecorder.start(10)
+  }
+
   async function handleStop() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
@@ -144,6 +149,7 @@ export const ScreenRecorder = () => {
     try {
       await ipcRenderer.invoke('saveScreenRecorded', buffer);
       setRecording(false)
+      recordedChunks = []
     } catch (error) {
       console.error('Error invoking saveScreenRecorded:', error);
     }
@@ -161,7 +167,7 @@ export const ScreenRecorder = () => {
 
       <video></video>
       <small>{formatTime(seconds)}</small>
-      <ActionButtons screenSelected={screenSelected} mediaRecorder={mediaRecorder} recording={recording} />
+      <ActionButtons screenSelected={screenSelected} mediaRecorder={mediaRecorder} recording={recording} handleStartReccording={handleStartReccording}/>
 
       <div className={styles.SelectWrapper}>
         <select
@@ -187,12 +193,13 @@ export const ScreenRecorder = () => {
 }
 
 type ActionButtonsProps = {
+  handleStartReccording:any,
   screenSelected: any,
   mediaRecorder: any,
-  recording: boolean
+  recording: boolean,
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ screenSelected, mediaRecorder, recording = false }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({ screenSelected, handleStartReccording, mediaRecorder, recording = false }) => {
 
   if (!screenSelected) {
     return <h3>Select a screen</h3>
@@ -204,7 +211,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ screenSelected, mediaReco
 
   return (
     <div className={styles.buttonWrapper}>
-      <button className={styles.StartButton} onClick={() => mediaRecorder.start(10)} disabled={recording}> Start</button>
+      <button className={styles.StartButton} onClick={() => handleStartReccording()} disabled={recording}> Start</button>
       <button className={styles.StopButton} onClick={() => mediaRecorder.stop()} disabled={!recording}> Stop</button>
     </div>
   )
