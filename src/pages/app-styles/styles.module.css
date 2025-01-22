@@ -1,16 +1,13 @@
-
-
-.AppStylesWrapper{
-  display: grid;
-  gap: 20px;
+.AppStylesWrapper {
+	display: grid;
+	gap: 20px;
 }
 
 .ColorWrapper {
-  display: flex;
+	display: flex;
 
-  & div {
-    height: 30px;
-    aspect-ratio: 1;
-  }
+	& div {
+		height: 30px;
+		aspect-ratio: 1;
+	}
 }
-

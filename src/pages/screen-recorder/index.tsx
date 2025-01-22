@@ -1,218 +1,231 @@
-import { useEffect, useState } from 'react';
-import styles from './styles.module.css';
-
+import { useEffect, useState } from "react";
+import styles from "./styles.module.css";
 
 export const ScreenRecorder = () => {
-  const [oprionsMenu, setOprionsMenu] = useState<any[]>([]);
-  const [screenSelected, setScreenSelected] = useState<any>();
-  const [mediaRecorder, setMediaRecorder] = useState<any>();
-  const [recording, setRecording] = useState<boolean>(false);
+	const [oprionsMenu, setOprionsMenu] = useState<any[]>([]);
+	const [screenSelected, setScreenSelected] = useState<any>();
+	const [mediaRecorder, setMediaRecorder] = useState<any>();
+	const [recording, setRecording] = useState<boolean>(false);
 
-  let recordedChunks: any[] = [];
-  let interval: NodeJS.Timeout | undefined;
-  const [seconds, setSeconds] = useState<number>(0);
-  const [timer, setTimer] = useState<boolean>(false);
+	let recordedChunks: any[] = [];
+	let interval: NodeJS.Timeout | undefined;
+	const [seconds, setSeconds] = useState<number>(0);
+	const [timer, setTimer] = useState<boolean>(false);
 
+	useEffect(() => {
+		getDesktopSources();
+	}, []);
 
-  useEffect(() => {
-    getDesktopSources()
-  }, []);
+	useEffect(() => {
+		if (!screenSelected) return;
+		selectSource(screenSelected);
+	}, [screenSelected]);
 
-  useEffect(() => {
-    if (!screenSelected) return
-    selectSource(screenSelected)
-  }, [screenSelected]);
+	useEffect(() => {
+		if (timer) {
+			interval = setInterval(() => {
+				setSeconds((prevSeconds) => prevSeconds + 1);
+			}, 1000);
+		} else {
+			clearInterval(interval);
+		}
 
-  useEffect(() => {
+		return () => clearInterval(interval);
+	}, [timer]);
 
-    if (timer) {
-      interval = setInterval(() => {
-        setSeconds((prevSeconds) => prevSeconds + 1);
-      }, 1000);
-    } else {
-      clearInterval(interval);
-    }
+	const getDesktopSources = async () => {
+		window.require("electron");
 
-    return () => clearInterval(interval);
-  }, [timer]);
+		if (!window) return;
+		if (!window.require) return;
 
-  const getDesktopSources = async () => {
+		const electron = window.require("electron");
 
-    window.require("electron")
-    
-    if (!window) return
-    if (!window.require) return
+		if (!electron) return;
 
-    const electron = window.require('electron');
+		const ipcRenderer = electron.ipcRenderer;
 
-    if (!electron) return
+		if (!ipcRenderer) {
+			console.error("Electron IPC renderer not available.");
+			return;
+		}
 
-    const ipcRenderer = electron.ipcRenderer;
+		try {
+			const sources = await ipcRenderer.invoke("getDesktopSources", {
+				types: ["screen", "window"],
+			});
+			const Options = sources.map((item: any) => {
+				const name =
+					item.name.length >= 40 ? item.name.slice(0, 35) + "..." : item.name;
+				return {
+					label: name,
+					id: item.id,
+				};
+			});
 
-    if (!ipcRenderer) {
-      console.error('Electron IPC renderer not available.');
-      return;
-    }
+			setOprionsMenu(Options);
+		} catch (error) {
+			console.error("Error getting desktop sources from main process:", error);
+		}
+	};
 
-    try {
-      const sources = await ipcRenderer.invoke('getDesktopSources', { types: ['screen', 'window'] });
-      const Options = sources.map((item: any) => {
-        const name = item.name.length >= 40 ? item.name.slice(0, 35) + "..." : item.name
-        return {
-          label: name,
-          id: item.id
-        }
-      })
+	async function selectSource(sourceId: any) {
+		const videoElement = document.querySelector("video");
 
-      setOprionsMenu(Options)
+		if (!videoElement) return;
 
-    } catch (error) {
-      console.error('Error getting desktop sources from main process:', error);
-    }
-  };
+		try {
+			const constraints: MediaStreamConstraints = {
+				audio: false,
+				video: {
+					mandatory: {
+						chromeMediaSource: "desktop",
+						chromeMediaSourceId: sourceId,
+					},
+				} as MediaTrackConstraints,
+			};
 
-  async function selectSource(sourceId: any) {
-    const videoElement = document.querySelector('video');
+			const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-    if (!videoElement) return
+			videoElement.srcObject = stream;
+			videoElement.play();
 
-    try {
-      const constraints: MediaStreamConstraints = {
-        audio: false,
-        video: {
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: sourceId,
-          }
-        } as MediaTrackConstraints
-      }
+			const options = { mimeType: "video/webm; codecs=H264" };
+			const mediaRecorderOprions = new MediaRecorder(stream, options);
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+			mediaRecorderOprions.ondataavailable = handleDataAvailable;
+			mediaRecorderOprions.onstop = handleStop;
 
-      videoElement.srcObject = stream;
-      videoElement.play();
+			setMediaRecorder(mediaRecorderOprions);
+		} catch (error) {
+			console.error("Error accessing user media", error);
+		}
+	}
 
-      const options = { mimeType: 'video/webm; codecs=H264' };
-      const mediaRecorderOprions = new MediaRecorder(stream, options);
+	const handleDataAvailable = (event: BlobEvent) => {
+		if (event.data.size === 0) return;
 
-      mediaRecorderOprions.ondataavailable = handleDataAvailable;
-      mediaRecorderOprions.onstop = handleStop;
+		recordedChunks.push(event.data);
+		setRecording(true);
+		setTimer(true);
+	};
 
-      setMediaRecorder(mediaRecorderOprions)
+	const handleStartReccording = () => {
+		recordedChunks = [];
+		mediaRecorder.start(10);
+	};
 
-    } catch (error) {
-      console.error('Error accessing user media', error);
-    }
+	async function handleStop() {
+		if (mediaRecorder && mediaRecorder.state !== "inactive") {
+			mediaRecorder.stop();
+		}
 
-  }
+		if (!window) return;
+		if (!window.require) return;
 
-  const handleDataAvailable = (event: BlobEvent) => {
-    if (event.data.size === 0) return
+		const electron = window.require("electron");
 
-    recordedChunks.push(event.data);
-    setRecording(true)
-    setTimer(true);
-  }
+		if (!electron) return;
 
-  const handleStartReccording = () => {
-    recordedChunks = []
-    mediaRecorder.start(10)
-  }
+		const ipcRenderer = electron.ipcRenderer;
 
-  async function handleStop() {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-    }
+		if (!ipcRenderer) {
+			console.error("Electron IPC renderer not available.");
+			return;
+		}
 
-    if (!window) return
-    if (!window.require) return
+		const blob = new Blob(recordedChunks, {
+			type: "video/webm; codecs=H264",
+		});
 
-    const electron = window.require('electron');
+		const buffer = Buffer.from(await blob.arrayBuffer());
 
-    if (!electron) return
+		setSeconds(0);
+		setTimer(false);
+		try {
+			await ipcRenderer.invoke("saveScreenRecorded", buffer);
+			setRecording(false);
+			recordedChunks = [];
+		} catch (error) {
+			console.error("Error invoking saveScreenRecorded:", error);
+		}
+	}
 
-    const ipcRenderer = electron.ipcRenderer;
+	const formatTime = (time: number): string => {
+		const minutes = Math.floor(time / 60);
+		const seconds = time % 60;
+		return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+	};
 
-    if (!ipcRenderer) {
-      console.error('Electron IPC renderer not available.');
-      return;
-    }
+	return (
+		<div className={styles.ScreenRecorderWrapper}>
+			<video></video>
+			<small>{formatTime(seconds)}</small>
+			<ActionButtons
+				screenSelected={screenSelected}
+				mediaRecorder={mediaRecorder}
+				recording={recording}
+				handleStartReccording={handleStartReccording}
+			/>
 
-    const blob = new Blob(recordedChunks, {
-      type: 'video/webm; codecs=H264'
-    });
-
-    const buffer = Buffer.from(await blob.arrayBuffer());
-
-    setSeconds(0);
-    setTimer(false);
-    try {
-      await ipcRenderer.invoke('saveScreenRecorded', buffer);
-      setRecording(false)
-      recordedChunks = []
-    } catch (error) {
-      console.error('Error invoking saveScreenRecorded:', error);
-    }
-
-  }
-
-  const formatTime = (time: number): string => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  };
-
-  return (
-    <div className={styles.ScreenRecorderWrapper}>
-
-      <video></video>
-      <small>{formatTime(seconds)}</small>
-      <ActionButtons screenSelected={screenSelected} mediaRecorder={mediaRecorder} recording={recording} handleStartReccording={handleStartReccording}/>
-
-      <div className={styles.SelectWrapper}>
-        <select
-          value={screenSelected}
-          onChange={(event) => setScreenSelected(event.target.value)}
-          disabled={recording}
-        >
-          {!screenSelected && (
-            <option value=''>Screens</option>
-          )}
-          {
-            oprionsMenu.map((item: any, index: number) => (
-              <option key={index} value={item.id}>{item.label}</option>
-            ))
-          }
-        </select>
-      </div>
-      <button onClick={() => getDesktopSources()}>
-        Refresh Screens
-      </button>
-    </div>
-  )
-}
+			<div className={styles.SelectWrapper}>
+				<select
+					value={screenSelected}
+					onChange={(event) => setScreenSelected(event.target.value)}
+					disabled={recording}
+				>
+					{!screenSelected && <option value="">Screens</option>}
+					{oprionsMenu.map((item: any, index: number) => (
+						<option key={index} value={item.id}>
+							{item.label}
+						</option>
+					))}
+				</select>
+			</div>
+			<button onClick={() => getDesktopSources()}>Refresh Screens</button>
+		</div>
+	);
+};
 
 type ActionButtonsProps = {
-  handleStartReccording:any,
-  screenSelected: any,
-  mediaRecorder: any,
-  recording: boolean,
-}
+	handleStartReccording: any;
+	screenSelected: any;
+	mediaRecorder: any;
+	recording: boolean;
+};
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ screenSelected, handleStartReccording, mediaRecorder, recording = false }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({
+	screenSelected,
+	handleStartReccording,
+	mediaRecorder,
+	recording = false,
+}) => {
+	if (!screenSelected) {
+		return <h3>Select a screen</h3>;
+	}
 
-  if (!screenSelected) {
-    return <h3>Select a screen</h3>
-  }
+	if (!mediaRecorder) {
+		return null;
+	}
 
-  if (!mediaRecorder) {
-    return null;
-  }
-
-  return (
-    <div className={styles.buttonWrapper}>
-      <button className={styles.StartButton} onClick={() => handleStartReccording()} disabled={recording}> Start</button>
-      <button className={styles.StopButton} onClick={() => mediaRecorder.stop()} disabled={!recording}> Stop</button>
-    </div>
-  )
-}
+	return (
+		<div className={styles.buttonWrapper}>
+			<button
+				className={styles.StartButton}
+				onClick={() => handleStartReccording()}
+				disabled={recording}
+			>
+				{" "}
+				Start
+			</button>
+			<button
+				className={styles.StopButton}
+				onClick={() => mediaRecorder.stop()}
+				disabled={!recording}
+			>
+				{" "}
+				Stop
+			</button>
+		</div>
+	);
+};
