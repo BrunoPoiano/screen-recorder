@@ -1,33 +1,37 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, dialog } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  desktopCapturer,
+  dialog,
+} = require("electron");
 const path = require("path");
-const url = require('url');
-const fs = require('fs')
+const url = require("url");
+const fs = require("fs");
 
-ipcMain.handle('saveScreenRecorded', async (event, buffer) => {
-
+ipcMain.handle("saveScreenRecorded", async (event, buffer, videoType) => {
   const { filePath } = await dialog.showSaveDialog({
-    buttonLabel: 'Save Video',
-    defaultPath: `video-${Date.now()}.webm`
+    buttonLabel: "Save Video",
+    defaultPath: `video-${Date.now()}.${videoType}`,
   });
 
   if (filePath) {
-
     fs.writeFile(filePath, buffer, (err) => {
       if (err) {
-        console.error('Error saving video:', err);
+        console.error("Error saving video:", err);
       } else {
-        console.log('Video saved successfully:', filePath);
+        console.log("Video saved successfully:", filePath);
       }
     });
   }
 });
 
-ipcMain.handle('getDesktopSources', async (event, options) => {
+ipcMain.handle("getDesktopSources", async (event, options) => {
   try {
     const sources = await desktopCapturer.getSources(options);
     return sources;
   } catch (error) {
-    console.error('Error getting desktop sources:', error);
+    console.error("Error getting desktop sources:", error);
     return [];
   }
 });
@@ -39,7 +43,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-    }
+    },
   });
 
   // DEV
@@ -49,29 +53,29 @@ function createWindow() {
   //Build
   mainWindow.loadURL(
     url.format({
-      pathname: path.join(__dirname, 'build', 'index.html'),
-      protocol: 'file:',
-      slashes: true
-    })
+      pathname: path.join(__dirname, "build", "index.html"),
+      protocol: "file:",
+      slashes: true,
+    }),
   );
 
-  mainWindow.on('closed', function () {
+  mainWindow.on("closed", function() {
     mainWindow = null;
   });
 }
 
 app.whenReady().then(() => {
-  createWindow()
+  createWindow();
 
-  app.on('activate', () => {
+  app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+      createWindow();
     }
-  })
-})
+  });
+});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
   }
-})
+});

@@ -228,9 +228,9 @@ select {
 	font-weight: 600;
 	cursor: pointer;
 
+  border: 0px solid var(--background-color);
 	border-right-width: 10px;
 	border-radius: var(--border-radius);
-	border: 0px solid var(--background-color);
 	outline: solid 1px var(--background-color);
 
 	background: var(--background-color);
