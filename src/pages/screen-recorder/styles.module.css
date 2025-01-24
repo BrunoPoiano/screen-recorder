@@ -7,22 +7,44 @@
 .buttonWrapper {
 	display: flex;
 	gap: 10px;
-}
+	flex-wrap: wrap;
+	align-items: center;
 
-.StartButton {
-	&:disabled {
-		opacity: 0.2;
+	.RefreshButton {
+		min-width: fit-content;
+		border: 0;
+		display: grid;
+		place-items: center;
+		padding: 0.25rem ;
 	}
 
-	color: var(--neutral-color-95);
-	background-color: var(--green-color-65);
-}
+	.RecordButton {
+		--_size: 2rem;
+		position: relative;
+		padding: calc(var(--_size) * 1.2);
+		aspect-ratio: 1;
+		border-radius: 100%;
+		display: grid;
+		place-items: center;
+		border: 0;
 
-.StopButton {
-	&:disabled {
-		opacity: 0.2;
+		&::after {
+			content: "";
+			position: absolute;
+			width: var(--_size);
+			aspect-ratio: 1;
+			border-radius: 100%;
+			background-color: var(--green-color-65);
+			transition: all 500ms ease;
+		}
+
+		&[data-recording="true"] {
+			padding: calc(var(--_size) * 0.4);
+
+			&::after {
+				width: calc(var(--_size) * 2.5);
+				background-color: var(--red-color-65);
+			}
+		}
 	}
-
-	color: var(--neutral-color-95);
-	background-color: var(--red-color-65);
 }

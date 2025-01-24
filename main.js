@@ -38,8 +38,6 @@ ipcMain.handle("getDesktopSources", async (event, options) => {
 
 function createWindow() {
   let mainWindow = new BrowserWindow({
-    width: 550,
-    height: 700,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -59,7 +57,7 @@ function createWindow() {
     }),
   );
 
-  mainWindow.on("closed", function() {
+  mainWindow.on("closed", () => {
     mainWindow = null;
   });
 }

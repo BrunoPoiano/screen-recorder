@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { RefreshSvg } from "../../modules/refreshSvg";
 import styles from "./styles.module.css";
 
 type Options = {
@@ -186,45 +187,50 @@ export const ScreenRecorder = () => {
 
   return (
     <div className={styles.ScreenRecorderWrapper}>
+      <div className={styles.buttonWrapper}>
+        <div className={styles.SelectWrapper}>
+          <select
+            value={mimeType}
+            onChange={(event) => setMimeType(event.target.value)}
+            disabled={recording}
+          >
+            {mimeTypeOptions.map((item: MimeOptions) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={styles.SelectWrapper}>
+          <select
+            value={screenSelected}
+            onChange={(event) => setScreenSelected(event.target.value)}
+            disabled={recording}
+          >
+            {!screenSelected && <option value="">Screens</option>}
+            {oprionsMenu.map((item: Options) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          type="button"
+          className={styles.RefreshButton}
+          onClick={() => getDesktopSources()}
+        >
+          <RefreshSvg />
+        </button>
+      </div>
       <video />
       <small>{formatTime(seconds)}</small>
-
       <ActionButtons
         screenSelected={screenSelected}
         mediaRecorder={mediaRecorder}
         recording={recording}
         handleStartReccording={handleStartReccording}
       />
-      <div className={styles.SelectWrapper}>
-        <select
-          value={mimeType}
-          onChange={(event) => setMimeType(event.target.value)}
-          disabled={recording}
-        >
-          {mimeTypeOptions.map((item: MimeOptions) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className={styles.SelectWrapper}>
-        <select
-          value={screenSelected}
-          onChange={(event) => setScreenSelected(event.target.value)}
-          disabled={recording}
-        >
-          {!screenSelected && <option value="">Screens</option>}
-          {oprionsMenu.map((item: Options) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <button type="button" onClick={() => getDesktopSources()}>
-        Refresh Screens
-      </button>
     </div>
   );
 };
@@ -276,7 +282,6 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
     return <h3>Select a screen</h3>;
   }
 
-  console.log(mediaRecorder);
   if (mediaRecorder === undefined) {
     return null;
   }
@@ -285,20 +290,12 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
     <div className={styles.buttonWrapper}>
       <button
         type="button"
-        className={styles.StartButton}
-        onClick={() => handleStartReccording()}
-        disabled={recording}
-      >
-        Start
-      </button>
-      <button
-        type="button"
-        className={styles.StopButton}
-        onClick={() => mediaRecorder.stop()}
-        disabled={!recording}
-      >
-        Stop
-      </button>
+        className={styles.RecordButton}
+        onClick={() =>
+          recording ? mediaRecorder.stop() : handleStartReccording()
+        }
+        data-recording={recording}
+      />
     </div>
   );
 };
