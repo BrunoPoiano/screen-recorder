@@ -1,9 +1,9 @@
-
-## Install
-Clone the project
+# Screen-Recorder
+Simple screen recorder app written React and Electron
 
 ![Screenshot of the App.](/public/demo.png)
 
+## Install
 ```bash
 git clone git@github.com:BrunoPoiano/screen-recorder.git
 ```
